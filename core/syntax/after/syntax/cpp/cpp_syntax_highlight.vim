@@ -12,10 +12,10 @@ syn match   cCustomClass    "\w\+\s*::" contains=cCustomScope
 hi def link cCustomFunc  Function
 hi def link cCustomClass Function
 
-source after/syntax/tags-macro.vim
-source after/syntax/tags-class.vim
-source after/syntax/tags-struct.vim
-source after/syntax/tags-enum.vim
-source after/syntax/tags-union.vim
-source after/syntax/tags-typedef.vim
+" source after/syntax/tags-macro.vim
+" source after/syntax/tags-class.vim
+" source after/syntax/tags-struct.vim
+" source after/syntax/tags-enum.vim
+" source after/syntax/tags-union.vim
+" source after/syntax/tags-typedef.vim
 

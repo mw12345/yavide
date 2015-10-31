@@ -26,7 +26,10 @@ class SymbolDefinitionManager():
                 symbol = Set()
                 for l in lines:
                     if not l.startswith("!_TAG_"): # ignore the ctags tag file information
-                        symbol.add(re.split(r'\t+', l)[0])
+                        if not "access:private" in l: # only take into account tags which are not declared as private/protected
+                            if not "access:protected" in l:
+                                if not "~" in l[0][0]: # we don't want destructors to be in the list
+                                    symbol.add(re.split(r'\t+', l)[0])
                 out = open(self.out_filename, "w")
                 out.write("\n".join(symbol))
         else:
@@ -34,7 +37,7 @@ class SymbolDefinitionManager():
 
     def __generate_symbol_db(self):
         if os.path.exists(self.root_directory):
-            cmd  = 'ctags --languages=C++ --fields=-afikKlmnsSzt --extra=-q ' + '--c++-kinds=' + self.tag_type  + ' -f ' + self.tags_filename + ' -R ' + self.root_directory
+            cmd  = 'ctags --languages=C++ --fields=a --extra=-fq ' + '--c++-kinds=' + self.tag_type  + ' -f ' + self.tags_filename + ' -R ' + self.root_directory
             logging.info("Generating the db: '{0}'".format(cmd))
             call(shlex.split(cmd))
         else:
@@ -51,17 +54,21 @@ class SymbolDefinitionManager():
             out = open(generated_syntax_file, "w")
             out.writelines(syntax_element)
                             
-class MacroDefinitionManager(SymbolDefinitionManager):
-    def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-macro", "d", "cDefine", "tags-macro-processed")
-
 class ClassDefinitionManager(SymbolDefinitionManager):
     def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-class", "c", "cppStructure", "tags-class-processed")
+        SymbolDefinitionManager.__init__(self, root_directory, "tags-class", "c", "Structure", "tags-class-processed")
 
 class StructDefinitionManager(SymbolDefinitionManager):
     def __init__(self, root_directory):
         SymbolDefinitionManager.__init__(self, root_directory, "tags-struct", "s", "Structure", "tags-struct-processed")
+
+class FuncDefinitionManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "tags-func", "f", "Function", "tags-func-processed")
+
+class MacroDefinitionManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "tags-macro", "d", "cDefine", "tags-macro-processed")
 
 class EnumDefinitionManager(SymbolDefinitionManager):
     def __init__(self, root_directory):
@@ -90,6 +97,8 @@ def main():
         unionDefinitions.run()
         typedefDefinitions = TypedefDefinitionManager(sys.argv[1])
         typedefDefinitions.run()
+        funcDefinitions = FuncDefinitionManager(sys.argv[1])
+        funcDefinitions.run()
     else:
         logging.error('Insufficient number of arguments. Please provide a directory containing sources to generate symbols for.')
 
