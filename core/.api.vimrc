@@ -33,6 +33,28 @@ let g:project_supported_types           = {
 \}
 
 
+function! Y_CodeHighlight_Run()
+    let l:currentBuffer = expand('%:p"')
+    python import sys
+    python import vim 
+    python sys.argv = ['', vim.eval('l:currentBuffer')]
+    execute('pyfile /opt/yavide/core/syntax/syntax-generator/syntax_generator.py')
+    execute('source /tmp/tags-namespace.vim')
+    execute('source /tmp/tags-class.vim')
+    execute('source /tmp/tags-struct.vim')
+    execute('source /tmp/tags-enum.vim')
+    execute('source /tmp/tags-enum-value.vim')
+    execute('source /tmp/tags-union.vim')
+    execute('source /tmp/tags-class-struct-union-member.vim')
+    execute('source /tmp/tags-local-variable.vim')
+    execute('source /tmp/tags-variable.vim')
+    execute('source /tmp/tags-func-proto.vim')
+    execute('source /tmp/tags-func.vim')
+    execute('source /tmp/tags-macro.vim')
+    execute('source /tmp/tags-typedef.vim')
+    execute('source /tmp/tags-extern-fwd.vim')
+endfunction
+
 " --------------------------------------------------------------------------------------------------------------------------------------
 "
 "	ENVIRONMENT INIT/DEINIT API

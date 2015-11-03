@@ -26,10 +26,10 @@ class SymbolDefinitionManager():
                 symbol = Set()
                 for l in lines:
                     if not l.startswith("!_TAG_"): # ignore the ctags tag file information
-                        if not "access:private" in l: # only take into account tags which are not declared as private/protected
-                            if not "access:protected" in l:
-                                if not "~" in l[0][0]: # we don't want destructors to be in the list
-                                    symbol.add(re.split(r'\t+', l)[0])
+                        #if not "access:private" in l: # only take into account tags which are not declared as private/protected
+                        #    if not "access:protected" in l:
+                        #        if not "~" in l[0][0]: # we don't want destructors to be in the list
+                        symbol.add(re.split(r'\t+', l)[0])
                 out = open(self.out_filename, "w")
                 out.write("\n".join(symbol))
         else:
@@ -54,51 +54,85 @@ class SymbolDefinitionManager():
             out = open(generated_syntax_file, "w")
             out.writelines(syntax_element)
                             
+class NamespaceDefinitionManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-namespace", "n", "yavideCppNamespace", "tags-namespace-processed")
+
 class ClassDefinitionManager(SymbolDefinitionManager):
     def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-class", "c", "Structure", "tags-class-processed")
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-class", "c", "yavideCppClass", "tags-class-processed")
 
 class StructDefinitionManager(SymbolDefinitionManager):
     def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-struct", "s", "Structure", "tags-struct-processed")
-
-class FuncDefinitionManager(SymbolDefinitionManager):
-    def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-func", "f", "Function", "tags-func-processed")
-
-class MacroDefinitionManager(SymbolDefinitionManager):
-    def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-macro", "d", "cDefine", "tags-macro-processed")
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-struct", "s", "yavideCppStructure", "tags-struct-processed")
 
 class EnumDefinitionManager(SymbolDefinitionManager):
     def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-enum", "g", "Structure", "tags-enum-processed")
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-enum", "g", "yavideCppEnum", "tags-enum-processed")
+
+class EnumValueManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-enum-value", "e", "yavideCppEnumValue", "tags-enum-value-processed")
 
 class UnionDefinitionManager(SymbolDefinitionManager):
     def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-union", "u", "Structure", "tags-union-processed")
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-union", "u", "yavideCppUnion", "tags-union-processed")
+
+class ClassStructUnionMemberDefinitionManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-class-struct-union-member", "m", "yavideCppClassStructUnionMember", "tags-class-struct-union-member-processed")
+
+class LocalVariableDefinitionManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-local-variable", "l", "yavideCppLocalVariable", "tags-local-variable-processed")
+
+class VariableDefinitionManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-variable", "v", "yavideCppVariableDefinition", "tags-variable-processed")
+
+class FuncPrototypeManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-func-proto", "p", "yavideCppFunctionPrototype", "tags-func-proto-processed")
+
+class FuncDefinitionManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-func", "f", "yavideCppFunctionDefinition", "tags-func-processed")
+
+class MacroDefinitionManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-macro", "d", "yavideCppMacro", "tags-macro-processed")
 
 class TypedefDefinitionManager(SymbolDefinitionManager):
     def __init__(self, root_directory):
-        SymbolDefinitionManager.__init__(self, root_directory, "tags-typedef", "t", "Typedef", "tags-typedef-processed")
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-typedef", "t", "yavideCppTypedef", "tags-typedef-processed")
+
+class ExternForwardDeclarationManager(SymbolDefinitionManager):
+    def __init__(self, root_directory):
+        SymbolDefinitionManager.__init__(self, root_directory, "/tmp/tags-extern-fwd", "x", "yavideCppExternForwardDeclaration", "tags-extern-fwd-processed")
 
 def main():
     if len(sys.argv) == 2:
         logging.info("Starting symbol generator for sources found at '{0}' ...".format(sys.argv[1]))
-        macroDefinitions = MacroDefinitionManager(sys.argv[1])
-        macroDefinitions.run()
-        classDefinitions = ClassDefinitionManager(sys.argv[1])
-        classDefinitions.run()
-        structDefinitions = StructDefinitionManager(sys.argv[1])
-        structDefinitions.run()
-        enumDefinitions = EnumDefinitionManager(sys.argv[1])
-        enumDefinitions.run()
-        unionDefinitions = UnionDefinitionManager(sys.argv[1])
-        unionDefinitions.run()
-        typedefDefinitions = TypedefDefinitionManager(sys.argv[1])
-        typedefDefinitions.run()
-        funcDefinitions = FuncDefinitionManager(sys.argv[1])
-        funcDefinitions.run()
+        symbolTypeList = [
+            NamespaceDefinitionManager(sys.argv[1]), 
+            ClassDefinitionManager(sys.argv[1]), 
+            StructDefinitionManager(sys.argv[1]),
+            EnumDefinitionManager(sys.argv[1]),
+            EnumValueManager(sys.argv[1]),
+            UnionDefinitionManager(sys.argv[1]),
+            ClassStructUnionMemberDefinitionManager(sys.argv[1]),
+            LocalVariableDefinitionManager(sys.argv[1]),
+            VariableDefinitionManager(sys.argv[1]),
+            FuncPrototypeManager(sys.argv[1]),
+            FuncDefinitionManager(sys.argv[1]),
+            MacroDefinitionManager(sys.argv[1]), 
+            TypedefDefinitionManager(sys.argv[1]),
+            ExternForwardDeclarationManager(sys.argv[1])
+        ]
+
+        for symbol in symbolTypeList:
+            symbol.run()
+        
     else:
         logging.error('Insufficient number of arguments. Please provide a directory containing sources to generate symbols for.')
 

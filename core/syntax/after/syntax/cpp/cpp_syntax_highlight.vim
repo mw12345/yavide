@@ -1,21 +1,18 @@
 " Vim syntax file
 " Language:	C++
-"
-" Ideas borrowed from: http://stackoverflow.com/questions/736701/class-function-names-highlighting-in-vim
 
-" Functions
-syn match   cCustomParen    "?=(" contains=cParen contains=cCppParen
-syn match   cCustomFunc     "\w\+\s*(\@=" contains=cCustomParen
-syn match   cCustomScope    "::"
-syn match   cCustomClass    "\w\+\s*::" contains=cCustomScope
-
-hi def link cCustomFunc  Function
-hi def link cCustomClass Function
-
-" source after/syntax/tags-macro.vim
-" source after/syntax/tags-class.vim
-" source after/syntax/tags-struct.vim
-" source after/syntax/tags-enum.vim
-" source after/syntax/tags-union.vim
-" source after/syntax/tags-typedef.vim
+hi def link yavideCppNamespace                  Identifier  " TODO
+hi def link yavideCppClass                      Structure
+hi def link yavideCppStructure                  Structure
+hi def link yavideCppEnum                       Structure
+hi def link yavideCppEnumValue                  Constant    " TODO
+hi def link yavideCppUnion                      Structure
+hi def link yavideCppClassStructUnionMember     Identifier  " TODO
+hi def link yavideCppLocalVariable              Type        " TODO
+hi def link yavideCppVariableDefinition         Type        " TODO
+hi def link yavideCppFunctionPrototype          Function
+hi def link yavideCppFunctionDefinition         Function
+hi def link yavideCppMacro                      Macro
+hi def link yavideCppTypedef                    Typedef
+hi def link yavideCppExternForwardDeclaration   Type        " TODO
 
