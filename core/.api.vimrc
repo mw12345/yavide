@@ -1,6 +1,6 @@
 " --------------------------------------------------------------------------------------------------------------------------------------
 "
-"	Global variables
+"	Global (vim) variables
 " 
 " --------------------------------------------------------------------------------------------------------------------------------------
 let g:project_configuration_filename	= '.yavide_proj'
@@ -32,28 +32,15 @@ let g:project_supported_types           = {
 \                                           'Mixed'     :   g:project_type_mixed,
 \}
 
-
-function! Y_CodeHighlight_Run()
-    let l:currentBuffer = expand('%:p"')
-    python import sys
-    python import vim 
-    python sys.argv = ['', vim.eval('l:currentBuffer'), "/tmp", "-n", "-c", "-s", "-e", "-ev", "-u", "-cusm", "-lv", "-vd", "-fp", "-fd", "-t", "-m", "-efwd"]
-    execute('pyfile /opt/yavide/core/syntax/syntax_highlighter/syntax_highlighter.py')
-    execute('source /tmp/yavideCppNamespace.vim')
-    execute('source /tmp/yavideCppClass.vim')
-    execute('source /tmp/yavideCppStructure.vim')
-    execute('source /tmp/yavideCppEnum.vim')
-    execute('source /tmp/yavideCppEnumValue.vim')
-    execute('source /tmp/yavideCppUnion.vim')
-    execute('source /tmp/yavideCppClassStructUnionMember.vim')
-    execute('source /tmp/yavideCppLocalVariable.vim')
-    execute('source /tmp/yavideCppVariableDefinition.vim')
-    execute('source /tmp/yavideCppFunctionPrototype.vim')
-    execute('source /tmp/yavideCppFunctionDefinition.vim')
-    execute('source /tmp/yavideCppMacro.vim')
-    execute('source /tmp/yavideCppTypedef.vim')
-    execute('source /tmp/yavideCppExternForwardDeclaration.vim')
-endfunction
+" --------------------------------------------------------------------------------------------------------------------------------------
+"
+"	Global (python) variables
+"
+" --------------------------------------------------------------------------------------------------------------------------------------
+python << EOF
+from multiprocessing import Queue
+server_queue = Queue()
+EOF
 
 " --------------------------------------------------------------------------------------------------------------------------------------
 "
@@ -70,6 +57,9 @@ function! Y_Env_Init()
     python import sys
     python sys.argv = ['init']
     execute('pyfile ' . g:YAVIDE_SOURCE_CODE_INDEXER_IF)
+
+    " Start code highlight service
+    call Y_CodeHighlight_Start()
 endfunction
 
 " """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -82,6 +72,9 @@ function! Y_Env_Deinit()
     python import sys
     python sys.argv = ['deinit']
     execute('pyfile ' . g:YAVIDE_SOURCE_CODE_INDEXER_IF)
+
+    " Shutdown code highlight service
+    call Y_CodeHighlight_Stop()
 endfunction
 
 " --------------------------------------------------------------------------------------------------------------------------------------
@@ -748,6 +741,83 @@ function! Y_SrcIndexer_Deinit()
     python import sys
     python sys.argv = ['stop']
     execute('pyfile ' . g:YAVIDE_SOURCE_CODE_INDEXER_IF)
+endfunction
+
+" --------------------------------------------------------------------------------------------------------------------------------------
+"
+"	SOURCE CODE HIGHLIGHT API
+"
+" --------------------------------------------------------------------------------------------------------------------------------------
+" """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Function: 	Y_CodeHighlight_Start()
+" Description:	Starts the code highlight background service.
+" Dependency:
+" """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! Y_CodeHighlight_Start()
+python << EOF
+from server.yavide_server import yavide_server_run
+from multiprocessing import Process
+
+server = Process(target=yavide_server_run, args=(server_queue, vim.eval('v:servername')), name="yavide_server") 
+server.daemon = False
+server.start()
+EOF
+endfunction
+
+" """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Function: 	Y_CodeHighlight_Stop()
+" Description:	Stops the code highlight background service.
+" Dependency:
+" """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! Y_CodeHighlight_Stop()
+python << EOF
+from multiprocessing import Queue
+
+server_queue.put([1, None, "SHUTDOWN"])
+EOF
+endfunction
+
+" """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Function: 	Y_CodeHighlight_Run()
+" Description:	Triggers the source code highlighting for current buffer.
+" Dependency:
+" """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! Y_CodeHighlight_Run()
+    let l:currentBuffer = expand('%:p"')
+python << EOF
+from multiprocessing import Queue
+
+#python import sys
+#python import vim 
+#python sys.argv = ['', vim.eval('l:currentBuffer'), "/tmp", "-n", "-c", "-s", "-e", "-ev", "-u", "-cusm", "-lv", "-vd", "-fp", "-fd", "-t", "-m", "-efwd"]
+
+server_queue.put([1, None, vim.eval('l:currentBuffer')])
+EOF
+endfunction
+
+" """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Function: 	Y_CodeHighlight_Apply()
+" Description:	Apply the results of source code highlighting for given filename.
+" Dependency:
+" """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! Y_CodeHighlight_Apply(filename)
+    let l:currentBuffer = expand('%:p"')
+    if l:currentBuffer == a:filename
+        execute('source /tmp/yavideCppNamespace.vim')
+        execute('source /tmp/yavideCppClass.vim')
+        execute('source /tmp/yavideCppStructure.vim')
+        execute('source /tmp/yavideCppEnum.vim')
+        execute('source /tmp/yavideCppEnumValue.vim')
+        execute('source /tmp/yavideCppUnion.vim')
+        execute('source /tmp/yavideCppClassStructUnionMember.vim')
+        execute('source /tmp/yavideCppLocalVariable.vim')
+        execute('source /tmp/yavideCppVariableDefinition.vim')
+        execute('source /tmp/yavideCppFunctionPrototype.vim')
+        execute('source /tmp/yavideCppFunctionDefinition.vim')
+        execute('source /tmp/yavideCppMacro.vim')
+        execute('source /tmp/yavideCppTypedef.vim')
+        execute('source /tmp/yavideCppExternForwardDeclaration.vim')
+    endif
 endfunction
 
 " --------------------------------------------------------------------------------------------------------------------------------------
